@@ -21,6 +21,10 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="mnist_de_encoder_daveyd.py" />
+    <Compile Include="prepare_data.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="ScanDenoising.py" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
