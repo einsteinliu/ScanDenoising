@@ -107,17 +107,26 @@ def main(args):
         num_epochs=None,
         shuffle=True)  
 
-    #estimator.train(
-    #    input_fn = train_func,
-    #    steps = 100,
-    #    hooks = [logging_hook])
+    estimator.train(
+        input_fn = train_func,
+        steps = 10,
+        hooks = [logging_hook])
+    
+    result = prepare_data.prepare_test("../test/1.png")
+    w = result["w"]
+    h = result["h"]
+    patches = result["patches"]
 
     predict_fun = tf.estimator.inputs.numpy_input_fn(
-        x = {"x":test_image_dirty},
-        y = test_image_dirty,shuffle=False)
+        x = {"x":patches},
+        y = patches,shuffle=False)
     
     predictions = estimator.predict(input_fn = predict_fun)
-    results = list(predictions)
+    clean_patches = list(predictions)
+    reconstructed_image,reconstructed_image_dirty = prepare_data.reconstruct_image(w,h,clean_patches,patches)
+    cv2.imshow("cleaned whole",reconstructed_image)
+    cv2.imshow("origin whole",reconstructed_image_dirty)
+    cv2.waitKey()
     a = 0
     
 
