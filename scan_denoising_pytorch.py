@@ -11,6 +11,7 @@ from torchvision import datasets
 from torch.utils.data import DataLoader
 import prepare_data
 import numpy as np
+import matplotlib.pyplot as plt
 
 class DocCleanNet(nn.Module):
     def __init__(self):
@@ -54,24 +55,80 @@ class DocDataset(Dataset):
     def __len__(self):
         return len(self.train_image_dirty)
 
-dataset = DocDataset()
-loader = DataLoader(dataset,batch_size=50,shuffle=True)
 
-denoise_net = DocCleanNet()
-denoise_net.cuda()
-optimizer = optim.Adam(denoise_net.parameters(),lr=0.001)
+x_grad = np.array([[1, 0, -1],[2, 0,-2],[ 1, 0,-1]])
+y_grad = np.array([[1, 2,  1],[0, 0, 0],[-1,-2,-1]])
+conv_grad_x = nn.Conv2d(1, 1, kernel_size=3, stride=1, padding=0, bias=False)
+conv_grad_y = nn.Conv2d(1, 1, kernel_size=3, stride=1, padding=0, bias=False)
+conv_grad_x.weight=nn.Parameter(torch.from_numpy(x_grad).float().unsqueeze(0).unsqueeze(0).cuda())
+conv_grad_y.weight=nn.Parameter(torch.from_numpy(y_grad).float().unsqueeze(0).unsqueeze(0).cuda())
 
-for epoch in range(1000):
-    denoise_net.train()
-    for batch_id,[dirty_batch,clean_batch] in enumerate(loader):
-        dirty = Variable(dirty_batch.view(-1,1,28,28).cuda())
-        clean = Variable(clean_batch.view(-1,1,28,28).cuda())
-        optimizer.zero_grad()
-        out = denoise_net(dirty)
-        loss = Func.l1_loss(out,clean)
-        if(batch_id%100==0):
-            print(loss.data.cpu().numpy())
-        loss.backward()
-        optimizer.step()
-    
+def gradient(img):
+    img_x = conv_grad_x(img)
+    img_y = conv_grad_y(img)
+    grad = torch.sqrt(torch.pow(img_x,2)+ torch.pow(img_y,2))
+    return grad
+
+ave = 1.0/(28*28*50)
+def MyLoss(src,dst):
+    grad_diff = (gradient(src)-gradient(dst)).abs().sum().mul(ave*0.0)
+    abs_diff = (src-dst).abs().sum().mul(ave*1.0)
+    return grad_diff,abs_diff
+
+def test(image_file,model,save_file):
+    result = prepare_data.prepare_test(image_file)
+    w = result["w"]
+    h = result["h"]
+    dirty_patches = result["patches"]
+    patches = torch.Tensor(result["patches"])
+    patches = patches.view(-1,1,28,28)
+    patches = patches.cuda()
+    patches = Variable(patches)
+    predictions = model(patches).view(-1,28,28)
+    clean_patches = list(predictions.data.cpu().numpy())
+    reconstructed_image, reconstructed_image_dirty = prepare_data.reconstruct_image(w, h, clean_patches, dirty_patches)
+    cv2.imshow("cleaned whole", reconstructed_image)
+    cv2.imshow("origin whole", reconstructed_image_dirty)
+    cv2.imwrite(save_file,reconstructed_image)
+    cv2.waitKey()
+
+training = True
+
+record = open("loss.txt","w")
+
+if(training):
+    dataset = DocDataset()
+    loader = DataLoader(dataset,batch_size=50,shuffle=True)
+    denoise_net = DocCleanNet().cuda()    
+    optimizer = optim.Adam(denoise_net.parameters(),lr=0.0001)
+    step = 0
+    for epoch in range(1000):
+        denoise_net.train()
+        for batch_id,[dirty_batch,clean_batch] in enumerate(loader):
+            dirty = Variable(dirty_batch.view(-1,1,28,28).cuda())
+            clean = Variable(clean_batch.view(-1,1,28,28).cuda())
+            optimizer.zero_grad()
+            out = denoise_net(dirty)
+            #loss = Func.l1_loss(out,clean)
+            grad_loss,abs_loss = MyLoss(out,clean)
+            loss = grad_loss+abs_loss
+            if(step>8000):
+                torch.save(denoise_net,"curr_model.pt")
+                print("model saved")
+                test("./test/1.png",denoise_net,"clean_grad.png")      
+            step = step + 1 
+            record.write(str(abs_loss.item())+","+str(grad_loss.item())+"\n")
+            if(batch_id%100==0):
+                print(abs_loss.item())
+                print(grad_loss.item())            
+                print("\n")
+            loss.backward()
+            optimizer.step()
+else:
+    denoise_net = torch.load("curr_model.pt")
+    denoise_net.cuda()
+    test("./test/1.png",denoise_net,"clean_no_grad.png")
+
+
+
 

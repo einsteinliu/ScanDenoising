@@ -27,7 +27,7 @@ def reconstruct_image(w,h,clean_patches,dirty_patches):
     reconstructed_image_dirty = np.zeros((w*size,h*size))
     for x in range(w):
         for y in range(h):
-            reconstructed_image[x*size:x*size+28,y*size:y*size+28] = clean_patches[y+x*h][:,:,0]
+            reconstructed_image[x*size:x*size+28,y*size:y*size+28] = clean_patches[y+x*h][:,:]
             reconstructed_image_dirty[x*size:x*size+28,y*size:y*size+28] = dirty_patches[y+x*h]
     return 1.0-np.multiply(1.0-reconstructed_image,1.0-reconstructed_image_dirty),reconstructed_image_dirty
 
