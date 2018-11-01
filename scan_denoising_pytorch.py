@@ -54,7 +54,7 @@ class DocCleanNet(nn.Module):
         logits = self.deconv22(x) #50,1,28,28
         logits = logits.add(input)
         return Func.sigmoid(logits)
-       
+
 class DocDataset(Dataset):
     def __init__(self, train = True, source = "./train/",target = "./train_cleaned/"):
         self.data_set = prepare_data.prepare_data_set(source, target)
@@ -94,8 +94,6 @@ loader = DataLoader(dataset,batch_size=50,shuffle=True)
 
 if training:
     denoise_net = DocCleanNet()
-    #denoise_net = torch.load("curr_model.pt")
-
 else:
     denoise_net = torch.load("curr_model.pt")
 

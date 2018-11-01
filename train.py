@@ -38,12 +38,6 @@ image_height = int(parser['train']['image_height'])
 saving_interval = int(parser['train']['saving_interval'])
 model_saving_interval = int(parser['train']['model_saving_interval'])
 
-def adaptImageToNet(origin_image, div):
-    height = int(origin_image.shape[0]/div)*div
-    width = int(origin_image.shape[1]/div)*div
-    origin_image = origin_image[:height,:width]
-    return np.float32(np.asarray(origin_image))/255.0  
-
 def load_data(folder_src="./train",folder_dst="./train_cleaned"):
     dirty_files = os.listdir(folder_src)
     clean_files = os.listdir(folder_dst)
@@ -53,8 +47,8 @@ def load_data(folder_src="./train",folder_dst="./train_cleaned"):
         for i in range(0,file_num):
             curr_image = cv2.imread(join(folder_src,dirty_files[i]))
             curr_clean = cv2.imread(join(folder_dst,clean_files[i]))
-            dataset['dirty'].append(adaptImageToNet(curr_image,8))
-            dataset['clean'].append(adaptImageToNet(curr_clean,8))
+            dataset['dirty'].append(prepare_data.adaptImageToNet(curr_image,8))
+            dataset['clean'].append(prepare_data.adaptImageToNet(curr_clean,8))
     return dataset             
 
 class DocDataset(Dataset):

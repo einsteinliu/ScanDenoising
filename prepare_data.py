@@ -6,6 +6,12 @@ from os.path import join
 train_image_folder = "../train/"
 clean_images_folder = "../train_cleaned/"
 
+def adaptImageToNet(origin_image, div):
+    height = int(origin_image.shape[0]/div)*div
+    width = int(origin_image.shape[1]/div)*div
+    origin_image = origin_image[:height,:width]
+    return np.float32(np.asarray(origin_image))/255.0  
+    
 def prepare_data_set(folder_dirty,folder_clean, size = 28):
     image_files = os.listdir(folder_dirty)
     dirty_images = []
