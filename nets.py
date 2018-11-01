@@ -11,7 +11,7 @@ from os.path import join
 class SegNet(nn.Module):
     def __init__(self):
         super(SegNet,self).__init__()
-        self.conv1 = nn.Conv2d(1,32,kernel_size=[5,5],stride=1,padding=2)
+        self.conv1 = nn.Conv2d(1,32,kernel_size=[5,5],padding=2)
         self.conv1_bn = nn.BatchNorm2d(32)
 
         self.conv2 = nn.Conv2d(32,64,[5,5],padding=2)
