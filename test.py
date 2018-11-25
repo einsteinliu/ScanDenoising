@@ -18,7 +18,6 @@ parser = configparser.ConfigParser()
 parser.read(opt.config)
 
 folder = parser['test']['folder']
-threshold = float(parser['test']['threshold'])
 model_file = parser['test']['model_file']
 output_folder = parser['test']['output_folder']
 
@@ -50,8 +49,7 @@ for image_file in images:
     patch = patch.cuda()
     clean_image = model(patch).view(-1,image.shape[0],image.shape[1])
     clean_image = clean_image.data.cpu().numpy()[0,:,:]
-    cv2.imshow('clean',clean_image)
-    cv2.waitKey(-1)
+    #cv2.imshow('clean',clean_image)
+    #cv2.waitKey(-1)
     clean_image = clean_image*255.0
-    cv2.imwrite(join(output_folder,image_file),clean_image)
-   
+    cv2.imwrite(join(output_folder,image_file),clean_image)   
